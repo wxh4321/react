@@ -20,7 +20,6 @@ export const {
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
-  enableComponentStackLocations,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
@@ -50,6 +49,7 @@ export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
 export const enableBlocksAPI = true;
+export const enableLazyElements = true;
 
 export const disableJavaScriptURLs = true;
 
@@ -67,6 +67,8 @@ export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
 
+export const enableComponentStackLocations = true;
+
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
@@ -75,9 +77,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
-
-export const deferPassiveEffectCleanupDuringUnmount = true;
-export const runAllPassiveEffectDestroysBeforeCreates = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
