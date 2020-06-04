@@ -20,3 +20,6 @@ import invariant from 'shared/invariant';
 // the failure isn't silent.
 
 invariant(false, 'This module must be shimmed by a specific renderer.');
+
+export * from './forks/ReactFiberHostConfig.dom'; // 环境调试修改1
+export * from './forks/ReactFiberHostConfig.custom';  // 环境调试修改2
