@@ -8,7 +8,7 @@
 import invariant from 'shared/invariant';
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
-
+let count = 1;
 const emptyObject = {};
 if (__DEV__) {
   Object.freeze(emptyObject);
@@ -18,6 +18,7 @@ if (__DEV__) {
  * Base class helpers for the updating state of a component.
  */
 function Component(props, context, updater) {
+  console.log('Component....'+(count++))
   this.props = props;
   this.context = context;
   // If a component has string refs, we will assign a different object later.

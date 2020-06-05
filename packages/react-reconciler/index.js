@@ -6,5 +6,4 @@
  *
  * @flow
  */
-
 export * from './src/ReactFiberReconciler';
