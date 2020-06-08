@@ -9,6 +9,7 @@
 
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
+import * as ReactDOM from './src/client/ReactDOM'
 export {
   createPortal,
   unstable_batchedUpdates,
@@ -30,3 +31,5 @@ export {
   unstable_createEventHandle,
   unstable_isNewReconciler,
 } from './src/client/ReactDOM';
+
+export default ReactDOM; // antd引用环境调试修改

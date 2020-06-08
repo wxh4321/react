@@ -8,6 +8,8 @@
  */
 
 // Keep in sync with https://github.com/facebook/flow/blob/master/lib/react.js
+import * as React from './src/React';
+
 export type StatelessFunctionalComponent<
   P,
 > = React$StatelessFunctionalComponent<P>;
@@ -85,3 +87,5 @@ export {
   unstable_createScope,
   unstable_useOpaqueIdentifier,
 } from './src/React';
+
+export default React; // antd引用环境调试修改
