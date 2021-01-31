@@ -18,6 +18,10 @@
  */
 
 export default function invariant(condition, format, a, b, c, d, e, f) {
+  if(!condition){
+    console.log(condition)
+  }
+  
   if(condition) return; // react源码调试更改
   throw new Error(
     'Internal React error: invariant() is meant to be replaced at compile ' +

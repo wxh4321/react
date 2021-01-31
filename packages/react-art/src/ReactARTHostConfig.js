@@ -10,10 +10,6 @@ import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 const pooledTransform = new Transform();
 
@@ -323,10 +319,6 @@ export function resetTextContent(domElement) {
   // Noop
 }
 
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
-}
-
 export function getRootHostContext() {
   return NO_CONTEXT;
 }
@@ -338,6 +330,9 @@ export function getChildHostContext() {
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export function queueMicrotask(callback: Function) {
+  invariant(false, 'Not implemented.');
+}
 
 export function shouldSetTextContent(type, props) {
   return (
@@ -433,22 +428,6 @@ export function clearContainer(container) {
   // TODO Implement this
 }
 
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactEventResponder<any, any>,
-  responderInstance: ReactEventResponderInstance<any, any>,
-  props: Object,
-  state: Object,
-  instance: Object,
-) {
-  throw new Error('Not yet implemented.');
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactEventResponderInstance<any, any>,
-): void {
-  throw new Error('Not yet implemented.');
-}
-
 export function getFundamentalComponentInstance(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
@@ -473,10 +452,6 @@ export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
 }
 
-export function removeInstanceEventHandles(instance) {
-  // noop
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   throw new Error('Not yet implemented');
 }
@@ -495,7 +470,7 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 

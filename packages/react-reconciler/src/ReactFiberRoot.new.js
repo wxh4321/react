@@ -17,10 +17,11 @@ import {
   NoLanePriority,
   NoTimestamp,
   createLaneMap,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
@@ -38,8 +39,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackId = NoLanes;
-  this.callbackPriority_new = NoLanePriority;
+  this.callbackPriority = NoLanePriority;
+  this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
@@ -52,6 +53,11 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
 
+  if (enableCache) {
+    this.pooledCache = null;
+    this.pooledCacheLanes = NoLanes;
+  }
+
   if (supportsHydration) {
     this.mutableSourceEagerHydrationData = null;
   }
@@ -59,7 +65,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
-    this.pendingInteractionMap_new = new Map();
+    this.pendingInteractionMap = new Map();
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
@@ -96,6 +102,21 @@ export function createFiberRoot(
   const uninitializedFiber = createHostRootFiber(tag);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
+
+  if (enableCache) {
+    const initialCache = new Map();
+    root.pooledCache = initialCache;
+    const initialState = {
+      element: null,
+      cache: initialCache,
+    };
+    uninitializedFiber.memoizedState = initialState;
+  } else {
+    const initialState = {
+      element: null,
+    };
+    uninitializedFiber.memoizedState = initialState;
+  }
 
   initializeUpdateQueue(uninitializedFiber);
 

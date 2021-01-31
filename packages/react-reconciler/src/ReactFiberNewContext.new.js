@@ -10,7 +10,8 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
+import type {SharedQueue} from './ReactUpdateQueue.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -27,11 +28,11 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
-import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
+import {createUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
@@ -72,9 +73,11 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
-  const context: ReactContext<T> = providerFiber.type._context;
-
+export function pushProvider<T>(
+  providerFiber: Fiber,
+  context: ReactContext<T>,
+  nextValue: T,
+): void {
   if (isPrimaryRenderer) {
     push(valueCursor, context._currentValue, providerFiber);
 
@@ -112,12 +115,12 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
   }
 }
 
-export function popProvider(providerFiber: Fiber): void {
+export function popProvider(
+  context: ReactContext<any>,
+  providerFiber: Fiber,
+): void {
   const currentValue = valueCursor.current;
-
   pop(valueCursor, providerFiber);
-
-  const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
     context._currentValue = currentValue;
   } else {
@@ -179,9 +182,9 @@ export function scheduleWorkOnParentPath(
   }
 }
 
-export function propagateContextChange(
+export function propagateContextChange<T>(
   workInProgress: Fiber,
-  context: ReactContext<mixed>,
+  context: ReactContext<T>,
   changedBits: number,
   renderLanes: Lanes,
 ): void {
@@ -194,7 +197,7 @@ export function propagateContextChange(
     let nextFiber;
 
     // Visit this fiber.
-    const list = fiber.dependencies_new;
+    const list = fiber.dependencies;
     if (list !== null) {
       nextFiber = fiber.child;
 
@@ -209,17 +212,30 @@ export function propagateContextChange(
 
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
-            const update = createUpdate(
-              NoTimestamp,
-              pickArbitraryLane(renderLanes),
-              null,
-            );
+            const lane = pickArbitraryLane(renderLanes);
+            const update = createUpdate(NoTimestamp, lane);
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
             // this render is thrown away. Since it's a race condition, not sure it's
             // worth fixing.
-            enqueueUpdate(fiber, update);
+
+            // Inlined `enqueueUpdate` to remove interleaved update check
+            const updateQueue = fiber.updateQueue;
+            if (updateQueue === null) {
+              // Only occurs if the fiber has been unmounted.
+            } else {
+              const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
+              const pending = sharedQueue.pending;
+              if (pending === null) {
+                // This is the first update. Create a circular list.
+                update.next = update;
+              } else {
+                update.next = pending.next;
+                pending.next = update;
+              }
+              sharedQueue.pending = update;
+            }
           }
           fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
           const alternate = fiber.alternate;
@@ -244,7 +260,7 @@ export function propagateContextChange(
       enableSuspenseServerRenderer &&
       fiber.tag === DehydratedFragment
     ) {
-      // If a dehydrated suspense bounudary is in this subtree, we don't know
+      // If a dehydrated suspense boundary is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       const parentSuspense = fiber.return;
@@ -303,7 +319,7 @@ export function prepareToReadContext(
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
 
-  const dependencies = workInProgress.dependencies_new;
+  const dependencies = workInProgress.dependencies;
   if (dependencies !== null) {
     const firstContext = dependencies.firstContext;
     if (firstContext !== null) {
@@ -368,7 +384,7 @@ export function readContext<T>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies_new = {
+      currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
         responders: null,
